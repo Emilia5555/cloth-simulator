@@ -29,5 +29,8 @@
     <ClInclude Include="shader_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="particle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

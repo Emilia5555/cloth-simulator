@@ -8,6 +8,8 @@
 #include "shaders.h"
 #include <vector>
 #include <cmath>
+// particle struct
+#include "particle.h"
 
 
 int main() {
@@ -52,20 +54,26 @@ int main() {
 	const int GRID_W = 10;
 	const int GRID_H = 10;
 
-	std::vector<float> vertices;
+	std::vector<Particle> particles;
 
 	// loop through height and width
 	for (int y = 0; y < GRID_H; y++) {
 		for (int x = 0; x < GRID_W; x++) {
-			// space points evenly across the grid 
+			// space points evenly across the grid
 			// *2 -1 changes range of point from 0-1 to 0-2 to -1 to 1
 			// make divisor a float to avoid integer division
-			float px = (x / (float)(GRID_W - 1) * 1.8f - 0.8f);
-			float py = (y / (float)(GRID_H - 1) * 1.8f - 0.8f);
-			// add each component to the list (px, py, 0.0)
-			vertices.push_back(px);
-			vertices.push_back(py);
-			vertices.push_back(0.0f);
+			float px = (x / (float)(GRID_W - 1) * 1.8f - 0.9f);
+			float py = (y / (float)(GRID_H - 1) * 1.8f - 0.9f);
+
+			// make a particle variable 
+			Particle p;
+			//set position to the variables we calculated earlier
+			p.position = glm::vec3(px, py, 0.0f);
+			// set velocity to 0
+			p.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+			p.pinned = false;
+			// add to vector of Particles
+			particles.push_back(p);
 		
 		
 		}
@@ -84,8 +92,10 @@ int main() {
 
 	// makes VBO the current active GL_ARRAY_BUFFER
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// uploads data into buffer
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+	// allocates space for particles in the GPU
+	glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(float) * 3, nullptr, GL_DYNAMIC_DRAW);
+
+	
 
 	// (void*)0 means start reading at byte 0 of the buffer
 	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
@@ -106,6 +116,19 @@ int main() {
 		glClearColor(1.0f, 0.627f, 0.992f, 0.55f);
 		// sets the color 
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		// creates a vector of floats from the particle positions
+		std::vector<float> positionData;
+		for (const Particle& p : particles) {
+			positionData.push_back(p.position.x);
+			positionData.push_back(p.position.y);
+			positionData.push_back(p.position.z);
+		};
+
+		// bind VBO before using
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		// updates the position data 
+		glBufferSubData(GL_ARRAY_BUFFER, 0, positionData.size() * sizeof(float), positionData.data());
 
 		// makes the draw call use the correct shader program
 		glUseProgram(shaderProgram);
