@@ -6,6 +6,9 @@
 // incude shaders and shader functions
 #include "shader_utils.h"
 #include "shaders.h"
+#include <vector>
+#include <cmath>
+
 
 int main() {
 
@@ -23,7 +26,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// creates the window (width px, height px, title, monitor for fullscreen, share context)
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Cloth Simulator", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(1000, 1000, "Cloth Simulator", nullptr, nullptr);
 	// if window doesn't get created, print error, terminate window, and exit
 	if (!window) {
 		std::cerr << "Failed to create GLFW window" << std::endl;
@@ -45,13 +48,28 @@ int main() {
 	// create shader program object for vertex and fragment shader
 	unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-	// test particle positions
-	float vertices[] = {
-		-0.5f, 0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f,
-	};
+	// 10x 10 grid of particle
+	const int GRID_W = 10;
+	const int GRID_H = 10;
+
+	std::vector<float> vertices;
+
+	// loop through height and width
+	for (int y = 0; y < GRID_H; y++) {
+		for (int x = 0; x < GRID_W; x++) {
+			// space points evenly across the grid 
+			// *2 -1 changes range of point from 0-1 to 0-2 to -1 to 1
+			// make divisor a float to avoid integer division
+			float px = (x / (float)(GRID_W - 1) * 1.8f - 0.8f);
+			float py = (y / (float)(GRID_H - 1) * 1.8f - 0.8f);
+			// add each component to the list (px, py, 0.0)
+			vertices.push_back(px);
+			vertices.push_back(py);
+			vertices.push_back(0.0f);
+		
+		
+		}
+	}
 
 	// holds ID for vertex array object
 	unsigned int VAO;
@@ -67,7 +85,7 @@ int main() {
 	// makes VBO the current active GL_ARRAY_BUFFER
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	// uploads data into buffer
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
 	// (void*)0 means start reading at byte 0 of the buffer
 	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
@@ -89,10 +107,14 @@ int main() {
 		// sets the color 
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// makes the draw call use the correct shader program
 		glUseProgram(shaderProgram);
+		// bind VAO before drawing
 		glBindVertexArray(VAO);
+		// makes the points 10.f
 		glPointSize(10.0f);
-		glDrawArrays(GL_POINTS, 0, 4);
+		// draws the points (kind of point, index of first point, point count)
+		glDrawArrays(GL_POINTS, 0, GRID_H * GRID_W);
 
 
 		// prevents screen from flickering by drawing to a back buffer and then swapping it to the front
