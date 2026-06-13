@@ -3,6 +3,9 @@
 // lets me create window and use GLFW functions
 #include <GLFW/glfw3.h>
 #include <iostream>
+// incude shaders and shader functions
+#include "shader_utils.h"
+#include "shaders.h"
 
 int main() {
 
@@ -38,6 +41,9 @@ int main() {
 		std::cerr << "Failed to initialze GLAD" << std::endl;
 		return -1;
 	}
+
+	// create shader program object for vertex and fragment shader
+	unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
