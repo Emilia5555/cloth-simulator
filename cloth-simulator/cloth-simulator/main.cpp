@@ -45,12 +45,56 @@ int main() {
 	// create shader program object for vertex and fragment shader
 	unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
+	// test particle positions
+	float vertices[] = {
+		-0.5f, 0.5f, 0.0f,
+		0.5f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+		-0.5f, -0.5f, 0.0f,
+	};
+
+	// holds ID for vertex array object
+	unsigned int VAO;
+	// holds ID for vertex buffer object
+	unsigned int VBO;
+	// generates ID for vertex array objects and stores in VAO
+	glGenVertexArrays(1, &VAO);
+	// generates ID for vertex array objects and stores in VBO
+	glGenBuffers(1, &VBO);
+	// makes our VAO currently active
+	glBindVertexArray(VAO);
+
+	// makes VBO the current active GL_ARRAY_BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// uploads data into buffer
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// (void*)0 means start reading at byte 0 of the buffer
+	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// enables input slot 0
+	glEnableVertexAttribArray(0);
+
+
+	// unbind VAO and VBO
+	// binding 0 is unbinding
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
 		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
-		glClearColor(1.0f, 0.627f, 0.992f, 1.0f);
+		glClearColor(1.0f, 0.627f, 0.992f, 0.55f);
 		// sets the color 
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(shaderProgram);
+		glBindVertexArray(VAO);
+		glPointSize(10.0f);
+		glDrawArrays(GL_POINTS, 0, 4);
+
+
 		// prevents screen from flickering by drawing to a back buffer and then swapping it to the front
 		glfwSwapBuffers(window);
 		// detects input events, without this line the program wouldnt respond to any input
