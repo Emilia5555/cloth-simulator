@@ -10,6 +10,8 @@
 #include <cmath>
 // particle struct
 #include "particle.h"
+// physics
+#include "physics.h"
 
 
 int main() {
@@ -109,13 +111,18 @@ int main() {
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	//time tracking
+	float lastTime = glfwGetTime();
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
-		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
-		glClearColor(1.0f, 0.627f, 0.992f, 0.55f);
-		// sets the color 
-		glClear(GL_COLOR_BUFFER_BIT);
+		//deltaTime tracking
+		float currentTime = glfwGetTime();
+		float deltaTime = currentTime - lastTime;
+		lastTime = currentTime;
+
+		applyForces(particles, deltaTime);
+
 
 		// creates a vector of floats from the particle positions
 		std::vector<float> positionData;
@@ -130,6 +137,10 @@ int main() {
 		// updates the position data 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, positionData.size() * sizeof(float), positionData.data());
 
+		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
+		glClearColor(1.0f, 0.627f, 0.992f, 0.55f);
+		// sets the color 
+		glClear(GL_COLOR_BUFFER_BIT);
 		// makes the draw call use the correct shader program
 		glUseProgram(shaderProgram);
 		// bind VAO before drawing

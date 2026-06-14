@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="particle.h" />
+    <ClInclude Include="physics.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="shader_utils.h" />
   </ItemGroup>
