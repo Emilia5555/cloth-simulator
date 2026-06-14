@@ -10,9 +10,10 @@
 #include <cmath>
 // particle struct
 #include "particle.h"
-// physics
+// physics and forces
 #include "physics.h"
-
+// spring
+#include "spring.h"
 
 int main() {
 
@@ -56,6 +57,9 @@ int main() {
 	const int GRID_W = 10;
 	const int GRID_H = 10;
 
+
+
+	// generate particles
 	std::vector<Particle> particles;
 
 	// loop through height and width
@@ -74,12 +78,60 @@ int main() {
 			// set velocity to 0
 			p.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 			p.pinned = false;
+			p.previousPosition = p.position;
 			// add to vector of Particles
 			particles.push_back(p);
-		
+
+			// pin top left corrner
+			if (x == 0 && y == GRID_H - 1) {
+				particles.back().pinned = true;
+			}
+			// pin top right corrner
+			if (x == GRID_W -1 && y == GRID_H - 1) {
+				particles.back().pinned = true;
+			}
 		
 		}
 	}
+
+	//generate springs
+	std::vector <Spring> springs;
+	float stiffness = 100.0f;
+
+	for (int y = 0; y < GRID_H; y++) {
+		for (int x = 0; x < GRID_W; x++) {
+			//converts 2D grid coordinatesinto a 1D vector index 
+			int index = y * GRID_W + x;
+
+			// horizontal spring
+			if (x < GRID_W - 1) {
+				// create spring object
+				Spring s;
+				// connect particle at index with the particle to the right
+				s.indexA = index;
+				s.indexB = index + 1;
+				// glm::distance calculates the distance between two vec3 positions
+				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
+				s.stiffness = stiffness;
+				springs.push_back(s);
+			}
+
+			// vertical spring
+			if (y < GRID_H - 1) {
+				Spring s;
+				s.indexA = index;
+				s.indexB = index + GRID_W;
+				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
+				s.stiffness = stiffness;
+				springs.push_back(s);
+			}
+
+
+
+		}
+	}
+
+
 
 	// holds ID for vertex array object
 	unsigned int VAO;
@@ -122,7 +174,7 @@ int main() {
 		lastTime = currentTime;
 
 		applyForces(particles, deltaTime);
-
+		applySprings(particles, springs);
 
 		// creates a vector of floats from the particle positions
 		std::vector<float> positionData;
