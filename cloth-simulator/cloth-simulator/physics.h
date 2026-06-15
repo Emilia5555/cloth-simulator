@@ -21,7 +21,7 @@ void applyForces(std::vector<Particle>& particles, float deltaTime) {
 			glm::vec3 temp = p.position;
 			// update position to position + (change in position) * acceleration * deltaTime^2
 			// 0.98f * GRAVITY mimics acceleration due to gravity (0.98f to dampen g)
-			p.position += (p.position - p.previousPosition) * 0.98f + GRAVITY * deltaTime * deltaTime;
+			p.position += (p.position - p.previousPosition) * 0.98f + (GRAVITY * deltaTime * deltaTime);
 			p.previousPosition = temp;
 
 		}
@@ -55,7 +55,7 @@ void applySprings(std::vector<Particle>& particles, std::vector<Spring>& springs
 		float displacement = currentLength - s.restLength;
 		// determines how much to move the particle (what direction * how much)
 		//  0.5f multiplier halves the correction since its being applied twice
-		glm::vec3 correction = direction * displacement * 0.5f;
+		glm::vec3 correction = direction * displacement * 0.5f * s.stiffness;
 
 		// if both are free move them each in equal and opposite directions
 		if (!a.pinned && !b.pinned) {

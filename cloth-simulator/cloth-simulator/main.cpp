@@ -86,7 +86,7 @@ int main() {
 			if (x == 0 && y == GRID_H - 1) {
 				particles.back().pinned = true;
 			}
-			// pin top right corrner
+			 //pin top right corrner
 			if (x == GRID_W -1 && y == GRID_H - 1) {
 				particles.back().pinned = true;
 			}
@@ -96,7 +96,8 @@ int main() {
 
 	//generate springs
 	std::vector <Spring> springs;
-	float stiffness = 100.0f;
+	float stiffness = 0.00088f;
+	float sheerStiffness = 0.00044f;
 
 	for (int y = 0; y < GRID_H; y++) {
 		for (int x = 0; x < GRID_W; x++) {
@@ -104,6 +105,7 @@ int main() {
 			int index = y * GRID_W + x;
 
 			// horizontal spring
+			// is particle isn't on the last collumn
 			if (x < GRID_W - 1) {
 				// create spring object
 				Spring s;
@@ -113,43 +115,89 @@ int main() {
 				// glm::distance calculates the distance between two vec3 positions
 				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
 				s.stiffness = stiffness;
+				// push back currrent springs to vector of Spring objects
 				springs.push_back(s);
 			}
 
 			// vertical spring
+			// is particle isn't on the very top row
 			if (y < GRID_H - 1) {
 				Spring s;
+				// connect particle at index with the particle one row above it
 				s.indexA = index;
 				s.indexB = index + GRID_W;
+				// glm::distance calculates the distance between two vec3 positions
 				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
 				s.stiffness = stiffness;
+				// push back currrent springs to vector of Spring objects
 				springs.push_back(s);
 			}
 
+			// shear springs
+			// diagonal springs (up-right)
+			// if particle is not on the edge
+			if (x < GRID_W-1 && y < GRID_H - 1) {
+				// create spring
+				Spring s;
+				// connect a particle to the particle up one row and one particle right
+				s.indexA = index;
+				s.indexB = index + GRID_W + 1;
+				// calculate natural rest length
+				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
+				s.stiffness = sheerStiffness;
+				springs.push_back(s);
+			}
 
+			// diagonal spring (up-left)
+			if (x > 0 && x < GRID_W && y < GRID_H - 1) {
+				// create spring
+				Spring s;
+				// connect a particle to the particle up one row and one particle right
+				s.indexA = index;
+				s.indexB = index + GRID_W - 1;
+				// calculate natural rest length
+				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
+				s.stiffness = sheerStiffness;
+				springs.push_back(s);
+			}
 
 		}
 	}
 
+	// GL_LINES draws lines between pairs so we need a vector with a pair for every line to draw
+	std::vector <unsigned int> indices;
+	for (Spring& s : springs) {
+		// take info from springs because each pring has a pair built into it
+		indices.push_back(s.indexA);
+		indices.push_back(s.indexB);
+	}
 
 
+	// buffer setup
 	// holds ID for vertex array object
 	unsigned int VAO;
 	// holds ID for vertex buffer object
 	unsigned int VBO;
-	// generates ID for vertex array objects and stores in VAO
+	// holds ID for element buffer object
+	unsigned int EBO;
+	// generates ID for vertex array object and stores in VAO
 	glGenVertexArrays(1, &VAO);
-	// generates ID for vertex array objects and stores in VBO
+	// generates ID for vertex buffer object and stores in VBO
 	glGenBuffers(1, &VBO);
+	// generates ID for element buffer object
+	glGenBuffers(1, &EBO);
+
 	// makes our VAO currently active
 	glBindVertexArray(VAO);
-
 	// makes VBO the current active GL_ARRAY_BUFFER
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// makes EBO curreently active
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
 	// allocates space for particles in the GPU
 	glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(float) * 3, nullptr, GL_DYNAMIC_DRAW);
-
-	
+	// uploads indices vector to the gpu
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
 	// (void*)0 means start reading at byte 0 of the buffer
 	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
@@ -174,7 +222,10 @@ int main() {
 		lastTime = currentTime;
 
 		applyForces(particles, deltaTime);
-		applySprings(particles, springs);
+		for(int i = 0; i < 5; i++) {
+			applySprings(particles, springs);
+		}
+		
 
 		// creates a vector of floats from the particle positions
 		std::vector<float> positionData;
@@ -190,17 +241,15 @@ int main() {
 		glBufferSubData(GL_ARRAY_BUFFER, 0, positionData.size() * sizeof(float), positionData.data());
 
 		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
-		glClearColor(1.0f, 0.627f, 0.992f, 0.55f);
+		glClearColor(0.804f, 0.682f, 1.0f, 0.561f);
 		// sets the color 
 		glClear(GL_COLOR_BUFFER_BIT);
 		// makes the draw call use the correct shader program
 		glUseProgram(shaderProgram);
 		// bind VAO before drawing
 		glBindVertexArray(VAO);
-		// makes the points 10.f
-		glPointSize(10.0f);
-		// draws the points (kind of point, index of first point, point count)
-		glDrawArrays(GL_POINTS, 0, GRID_H * GRID_W);
+		// draws the lines (shape to draw, how many lines, data type of indices, offest into the ebo)
+		glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
 
 
 		// prevents screen from flickering by drawing to a back buffer and then swapping it to the front
