@@ -147,8 +147,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cloth.h" />
     <ClInclude Include="particle.h" />
     <ClInclude Include="physics.h" />
+    <ClInclude Include="renderer.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="shader_utils.h" />
     <ClInclude Include="spring.h" />

@@ -1,0 +1,70 @@
+#pragma once
+#include <glad/glad.h>
+#include <vector>
+#include "particle.h"
+#include "spring.h"
+
+void setupBuffers(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO, std::vector<Particle>& particles, std::vector<Spring>& springs)
+{
+	// buffer setup
+	// clear anything that was in the buffers
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+
+	// GL_LINES draws lines between pairs so we need a vector with a pair for every line to draw
+	std::vector <unsigned int> indices;
+	for (Spring& s : springs) {
+		// take info from springs because each pring has a pair built into it
+		indices.push_back(s.indexA);
+		indices.push_back(s.indexB);
+	}
+	
+	// generates ID for vertex array object and stores in VAO
+	glGenVertexArrays(1, &VAO);
+	// generates ID for vertex buffer object and stores in VBO
+	glGenBuffers(1, &VBO);
+	// generates ID for element buffer object
+	glGenBuffers(1, &EBO);
+
+	// makes our VAO currently active
+	glBindVertexArray(VAO);
+	// makes VBO the current active GL_ARRAY_BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// makes EBO curreently active
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+	// allocates space for particles in the GPU
+	glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(float) * 3, nullptr, GL_DYNAMIC_DRAW);
+	// uploads indices vector to the gpu
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+	// (void*)0 means start reading at byte 0 of the buffer
+	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// enables input slot 0
+	glEnableVertexAttribArray(0);
+
+
+	// unbind VAO and VBO
+	// binding 0 is unbinding
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+}
+
+void uploadPositions(unsigned int VBO, std::vector<Particle>& particles) 
+{
+	// creates a vector of floats from the particle positions
+	std::vector<float> positionData;
+	for (const Particle& p : particles) {
+		positionData.push_back(p.position.x);
+		positionData.push_back(p.position.y);
+		positionData.push_back(p.position.z);
+	};
+
+	// bind VBO before using
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// updates the position data 
+	glBufferSubData(GL_ARRAY_BUFFER, 0, positionData.size() * sizeof(float), positionData.data());
+}
