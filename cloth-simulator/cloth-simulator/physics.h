@@ -5,8 +5,8 @@
 
 
 // constant to represent gravity (-9.8 in y)
-const glm::vec3 GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
-
+glm::vec3 GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
+float damping = 0.999f;
 
 // changes position based on what forces are acting on the particle
 // doesn't affect pinned particles
@@ -20,8 +20,8 @@ void applyForces(std::vector<Particle>& particles, float deltaTime) {
 			// temporary to hold initial position
 			glm::vec3 temp = p.position;
 			// update position to position + (change in position) * acceleration * deltaTime^2
-			// 0.98f * GRAVITY mimics acceleration due to gravity (0.98f to dampen g)
-			p.position += (p.position - p.previousPosition) * 0.98f + (GRAVITY * deltaTime * deltaTime);
+			// 0.98f * GRAVITY mimics acceleration due to gravity
+			p.position += (p.position - p.previousPosition) * damping + (GRAVITY * deltaTime * deltaTime);
 			p.previousPosition = temp;
 
 		}
@@ -85,6 +85,10 @@ void resolveGroundCollisions(std::vector<Particle>& particles, float groundY) {
 			// set all y pos to groundY
 			p.position.y = groundY;
 			p.previousPosition.y = groundY;
+			// add friction to the ground
+			// dampen horizontal velocity when it hits the ground
+			p.previousPosition.x = p.position.x + (p.previousPosition.x - p.position.x) * 0.95f;
+			p.previousPosition.z = p.position.z + (p.previousPosition.z - p.position.z) * 0.95f;
 		}
 	}
 }

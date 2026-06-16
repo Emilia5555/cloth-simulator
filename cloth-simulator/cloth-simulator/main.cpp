@@ -14,6 +14,10 @@
 #include "physics.h"
 // spring
 #include "spring.h"
+// imgui controls
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 int main() {
 
@@ -31,7 +35,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// creates the window (width px, height px, title, monitor for fullscreen, share context)
-	GLFWwindow* window = glfwCreateWindow(1000, 1000, "Cloth Simulator", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(1000, 1200, "Cloth Simulator", nullptr, nullptr);
 	// if window doesn't get created, print error, terminate window, and exit
 	if (!window) {
 		std::cerr << "Failed to create GLFW window" << std::endl;
@@ -50,12 +54,23 @@ int main() {
 		return -1;
 	}
 
+	// ImGui setup
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui_ImplGlfw_InitForOpenGL(window,true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui::StyleColorsDark();
+
+
+
+
 	// create shader program object for vertex and fragment shader
 	unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
 	// 10x 10 grid of particle
-	const int GRID_W = 10;
-	const int GRID_H = 10;
+	const int GRID_W = 50;
+	const int GRID_H = 50;
 
 
 
@@ -69,7 +84,7 @@ int main() {
 			// *2 -1 changes range of point from 0-1 to 0-2 to -1 to 1
 			// make divisor a float to avoid integer division
 			float px = (x / (float)(GRID_W - 1) * 1.8f - 0.9f);
-			float py = (y / (float)(GRID_H - 1) * 1.8f - 0.9f);
+			float py = (y / (float)(GRID_H - 1) * 1.3f - 0.4f);
 
 			// make a particle variable 
 			Particle p;
@@ -96,9 +111,9 @@ int main() {
 
 	//generate springs
 	std::vector <Spring> springs;
-	float stiffness = 0.00088f;
-	float sheerStiffness = 0.00044f;
-	float bendStiffness = 0.0001f;
+	float stiffness = 1.2f;
+	float shearStiffness = 1.1f;
+	float bendStiffness = 1.0f;
 
 	for (int y = 0; y < GRID_H; y++) {
 		for (int x = 0; x < GRID_W; x++) {
@@ -145,7 +160,7 @@ int main() {
 				s.indexB = index + GRID_W + 1;
 				// calculate natural rest length
 				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
-				s.stiffness = sheerStiffness;
+				s.stiffness = shearStiffness;
 				springs.push_back(s);
 			}
 
@@ -158,7 +173,7 @@ int main() {
 				s.indexB = index + GRID_W - 1;
 				// calculate natural rest length
 				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
-				s.stiffness = sheerStiffness;
+				s.stiffness = shearStiffness;
 				springs.push_back(s);
 			}
 
@@ -236,18 +251,33 @@ int main() {
 	//time tracking
 	float lastTime = glfwGetTime();
 	// ground position
-	float groundY = -0.9;
+	float groundY = -0.6;
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
+		// ImGui per frame setup
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("Cloth Controls");
+		ImGui::SliderFloat("Gravity", &GRAVITY.y,-20.0f,0.0f);
+		ImGui::SliderFloat("Damping", &damping, 0.9f, 1.0f);
+		ImGui::SliderFloat("Stiffness", &stiffness, 0.0f, 2.0f);
+		ImGui::SliderFloat("Shear Stiffness", &shearStiffness, 0.0f, 2.0f);
+		ImGui::SliderFloat("Bend Stiffness", &bendStiffness, 0.0f, 2.0f);
+		ImGui::SliderFloat("Ground Y", &groundY, -2.0f, 0.0f);
+		ImGui::End();
+
 		//deltaTime tracking
 		float currentTime = glfwGetTime();
 		float deltaTime = currentTime - lastTime;
+		deltaTime = glm::min(deltaTime,0.04f);
 		lastTime = currentTime;
 
 		applyForces(particles, deltaTime);
 		// apply springs multiple times per loop to prevent extreme bouncing
-		for(int i = 0; i < 5; i++) {
+		for(int i = 0; i < 30; i++) {
 			applySprings(particles, springs);
 		}
 		
@@ -268,7 +298,7 @@ int main() {
 		glBufferSubData(GL_ARRAY_BUFFER, 0, positionData.size() * sizeof(float), positionData.data());
 
 		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
-		glClearColor(0.804f, 0.682f, 1.0f, 0.561f);
+		glClearColor(0.682f, 0.788f, 1.0f, 0.561f);
 		// sets the color 
 		glClear(GL_COLOR_BUFFER_BIT);
 		// makes the draw call use the correct shader program
@@ -278,7 +308,9 @@ int main() {
 		// draws the lines (shape to draw, how many lines, data type of indices, offest into the ebo)
 		glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
 
-
+		// render ImGui controls
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		// prevents screen from flickering by drawing to a back buffer and then swapping it to the front
 		glfwSwapBuffers(window);
 		// detects input events, without this line the program wouldnt respond to any input
