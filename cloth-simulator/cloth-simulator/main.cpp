@@ -98,6 +98,7 @@ int main() {
 	std::vector <Spring> springs;
 	float stiffness = 0.00088f;
 	float sheerStiffness = 0.00044f;
+	float bendStiffness = 0.0001f;
 
 	for (int y = 0; y < GRID_H; y++) {
 		for (int x = 0; x < GRID_W; x++) {
@@ -161,6 +162,27 @@ int main() {
 				springs.push_back(s);
 			}
 
+			// bend springs
+			// bend spring horizonal
+			if (x < GRID_W-2) {
+				Spring s;
+				s.indexA = index;
+				s.indexB = index + 2;
+				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
+				s.stiffness = bendStiffness;
+				springs.push_back(s);
+			}
+
+			// bend spring vertical
+			if (y < GRID_H - 2) {
+				Spring s;
+				s.indexA = index;
+				s.indexB = index + (2 * GRID_W);
+				s.restLength = glm::distance(particles[s.indexA].position, particles[s.indexB].position);
+				s.stiffness = bendStiffness;
+				springs.push_back(s);
+			}
+			
 		}
 	}
 
@@ -213,6 +235,8 @@ int main() {
 
 	//time tracking
 	float lastTime = glfwGetTime();
+	// ground position
+	float groundY = -0.9;
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
@@ -222,10 +246,13 @@ int main() {
 		lastTime = currentTime;
 
 		applyForces(particles, deltaTime);
+		// apply springs multiple times per loop to prevent extreme bouncing
 		for(int i = 0; i < 5; i++) {
 			applySprings(particles, springs);
 		}
 		
+		// make sure the cloth doesn't go through the floor
+		resolveGroundCollisions(particles, groundY);
 
 		// creates a vector of floats from the particle positions
 		std::vector<float> positionData;

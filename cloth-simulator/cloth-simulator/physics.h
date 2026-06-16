@@ -73,3 +73,18 @@ void applySprings(std::vector<Particle>& particles, std::vector<Spring>& springs
 
 	}
 }
+
+// prevents cloth from falling through the floor
+// particles: vector of all particles
+// groundY: y position of the gournd plane
+void resolveGroundCollisions(std::vector<Particle>& particles, float groundY) {
+	// checks y pos of every particle
+	for (Particle& p : particles) {
+		// if particle y is below y pos
+		if (p.position.y < groundY) {
+			// set all y pos to groundY
+			p.position.y = groundY;
+			p.previousPosition.y = groundY;
+		}
+	}
+}
