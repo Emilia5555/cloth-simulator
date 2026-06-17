@@ -49,7 +49,7 @@ int main() {
 		return -1;
 	}
 
-	//applies the OpenGL context to the window. essentially just makes OpenGL work with the window we just made
+	//applies the OpenGL context to the window, makes OpenGL work with the window we just made
 	glfwMakeContextCurrent(window);
 
 	//initialize GLAD to make GLFW work with windows
@@ -60,11 +60,17 @@ int main() {
 	}
 
 	// ImGui setup
+	// gotta have this
 	IMGUI_CHECKVERSION();
+	// creates context ill be working with
 	ImGui::CreateContext();
+	// stores ImGui input/output configuration
 	ImGuiIO& io = ImGui::GetIO();
+	// connects ImGui to windows
 	ImGui_ImplGlfw_InitForOpenGL(window,true);
+	// conects ImGui to OpenGl 3.3 renderer
 	ImGui_ImplOpenGL3_Init("#version 330");
+	// dark theme for control panel
 	ImGui::StyleColorsDark();
 
 
@@ -85,7 +91,7 @@ int main() {
 	std::vector <Spring> springs;
 	// adjusts stiffness of springs
 	const float DEFAULT_STIFFNESS = 1.2f; 
-	const float DEFAULT_SHEAR = 1.1f;
+	const float DEFAULT_SHEAR = 1.0f;
 	const float DEFAULT_BEND = 0.08f;
 
 	float stiffness = DEFAULT_STIFFNESS;
@@ -114,42 +120,54 @@ int main() {
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
-		// ImGui per frame setup
+		// tells ImGui a new frame is starting
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		// starts an ImGui window called cloth controls
 		ImGui::Begin("Cloth Controls");
+		// slider for gravity y component (range: -20 to 0)
 		ImGui::SliderFloat("Gravity", &GRAVITY.y,-20.0f,0.0f);
+		// slider for damping (range: 0.9 to 1.0)
 		ImGui::SliderFloat("Damping", &damping, 0.9f, 1.0f);
-		ImGui::SliderFloat("Stiffness", &stiffness, 0.0f, 2.0f);
-		ImGui::SliderFloat("Shear Stiffness", &shearStiffness, 0.0f, 2.0f);
-		ImGui::SliderFloat("Bend Stiffness", &bendStiffness, 0.0f, 2.0f);
+		// sliders for stiffness (range: 0.0 to 10.0)
+		ImGui::SliderFloat("Stiffness", &stiffness, 0.0f, 100.0f);
+		ImGui::SliderFloat("Shear Stiffness", &shearStiffness, 0.0f, 10.0f);
+		ImGui::SliderFloat("Bend Stiffness", &bendStiffness, 0.0f, 10.0f);
+		// slider for y pos of ground (-2 to 0)
 		ImGui::SliderFloat("Ground Y", &groundY, -2.0f, 0.0f);
+		// reset button
+		// if reset button is pushed
 		if (ImGui::Button("Reset")) 
 		{
+			// set all values to what they were initially
 			stiffness = DEFAULT_STIFFNESS;
 			shearStiffness = DEFAULT_SHEAR;
 			bendStiffness = DEFAULT_BEND;
 			GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
 			damping = 0.999f;
 			groundY=-0.6f;
+			// regenerate the cloth
 			generateCloth(particles, springs, GRID_W, GRID_H, stiffness, shearStiffness, bendStiffness);
+			// call setupBuffers
 			setupBuffers(VAO,VBO,EBO,particles,springs);
 			
 
 		}
+		//end the ImGui window
 		ImGui::End();
 
 		//deltaTime tracking
 		float currentTime = glfwGetTime();
 		float deltaTime = currentTime - lastTime;
+		// cap delta time to prevent it from breaking the simulation when the window is moved 
 		deltaTime = glm::min(deltaTime,0.04f);
 		lastTime = currentTime;
 
 		applyForces(particles, deltaTime);
-		// apply springs multiple times per loop to prevent extreme bouncing
-		for(int i = 0; i < 30; i++) {
+		// apply springs multiple times per loop to prevent weird behavior
+		for(int i = 0; i < 40; i++) {
 			applySprings(particles, springs);
 		}
 		
@@ -160,7 +178,7 @@ int main() {
 		uploadPositions(VBO, particles);
 
 		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
-		glClearColor(0.682f, 0.788f, 1.0f, 0.561f);
+		glClearColor(0.067f, 0.071f, 0.102f, 1.0f);
 		// sets the color 
 		glClear(GL_COLOR_BUFFER_BIT);
 		// makes the draw call use the correct shader program

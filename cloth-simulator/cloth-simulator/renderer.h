@@ -4,6 +4,13 @@
 #include "particle.h"
 #include "spring.h"
 
+// creates and configures VAO, VBO, and EBO for rendering cloth mesh
+// deletes anything in buffer objects before creating new ones
+// VAO: int to hold vertex array object ID
+// VBO: int to hold vertex buffer object ID
+// EBO: int to hold element buffer object ID
+// particles: vector of particles, used to allocate GPU memory to hold positions
+// springs: vector of springs, used to create vector of pairs to be connected by springs
 void setupBuffers(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO, std::vector<Particle>& particles, std::vector<Spring>& springs)
 {
 	// buffer setup
@@ -53,6 +60,10 @@ void setupBuffers(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO, std::
 
 }
 
+// creates a vector of floats from particle positions and uploads that data to the GPU 
+// called after every position update to sync CPU and GPU positions
+// VBO: ID of vertex buffer object
+// particles: vector of particles
 void uploadPositions(unsigned int VBO, std::vector<Particle>& particles) 
 {
 	// creates a vector of floats from the particle positions

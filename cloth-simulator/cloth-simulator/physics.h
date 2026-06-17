@@ -44,7 +44,7 @@ void applySprings(std::vector<Particle>& particles, std::vector<Spring>& springs
 		glm::vec3 delta = b.position - a.position;
 		// stores length of delta
 		float currentLength = glm::length(delta);
-		// prevent /0 error
+		// prevent / 0 error
 		if (currentLength == 0.0f) {
 			continue;
 		} 
@@ -54,7 +54,7 @@ void applySprings(std::vector<Particle>& particles, std::vector<Spring>& springs
 		// finds how far the particle is from its natural length
 		float displacement = currentLength - s.restLength;
 		// determines how much to move the particle (what direction * how much)
-		//  0.5f multiplier halves the correction since its being applied twice
+		// 0.5f multiplier halves the correction since its being applied twice
 		glm::vec3 correction = direction * displacement * 0.5f * s.stiffness;
 
 		// if both are free move them each in equal and opposite directions

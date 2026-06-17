@@ -2,6 +2,11 @@
 #include <glad/glad.h>
 #include <iostream>
 
+// compiles a GLSL shader
+// prints error messege if compilation fails
+// type: GL_VERTEX_SHADER or GL_FRAGMENT_SHADER
+// source: null-terminated string 
+// returns: integer ID of compiled shader object on the GPU
 unsigned int compileShader(unsigned int type, const char* source) {
 	// create an empty shader object assigns its ID number to int shader
 	unsigned int shader = glCreateShader(type);
@@ -12,7 +17,7 @@ unsigned int compileShader(unsigned int type, const char* source) {
 
 	// acts like a boolean
 	int success = 0;
-	// my copy of the inforlog, currently empty
+	// my copy of the infolog, currently empty
 	char infoLog[512];
 
 	// checks if shader compiled and sets success depending on if it does
@@ -25,9 +30,15 @@ unsigned int compileShader(unsigned int type, const char* source) {
 		// outputs error message
 		std::cerr << "Shader compilation failed:\n" << infoLog << std::endl;
 	}
+	// return ID referencing shader object on GPU
 	return shader;
 }
 
+// compiles and links vertex and fragment shaders into a shader program
+// prints error message if linking fails
+// deletes shader objects after linking
+// vertexSource: null-terminated string containing vertex shader GLSL 
+// fragmentSource: null-terminated string containing fragment shader GLSL 
 unsigned int createShaderProgram(const char* vertexSource, const char* fragmentSource) {
 	// compile vertex and fragment shaders
 	unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
