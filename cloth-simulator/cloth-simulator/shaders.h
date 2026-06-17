@@ -7,10 +7,17 @@ const char* vertexShaderSource = R"(
 	// declares aPos as a 3D vector at location 0
 	layout (location=0) in vec3 aPos;
 	
+	// uniform means it doesnt change
+	// accepts view and projection matrices as uniforms so the GPU can transform particle positions correctly
+	uniform mat4 view;
+	uniform mat4 projection;
+
 	//main function that runs for every vertex
 	void main() {
-		// makes the vec3 aPos into a vec4 but just sets w to 1.0
-		gl_Position = vec4(aPos,1.0);
+		// matricex mutiplication applies left to right
+		// first view makes the world space into camera space
+		// then projection adds perspective
+		gl_Position = projection * view * vec4(aPos, 1);
 	}
 )";
 

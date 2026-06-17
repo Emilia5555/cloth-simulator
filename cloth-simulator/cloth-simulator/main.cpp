@@ -22,6 +22,11 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+// matrix
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+//camera
+#include "camera.h"
 
 
 int main() {
@@ -39,8 +44,12 @@ int main() {
 	// tell GLFW to use the core profile, which means we only have access to modern OpenGL functions
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	// consts for window size
+	const float WINDOW_HEIGHT = 1200;
+	const float WINDOW_WIDTH = 1000;
+
 	// creates the window (width px, height px, title, monitor for fullscreen, share context)
-	GLFWwindow* window = glfwCreateWindow(1000, 1200, "Cloth Simulator", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Cloth Simulator", nullptr, nullptr);
 	// if window doesn't get created, print error, terminate window, and exit
 	if (!window) {
 		std::cerr << "Failed to create GLFW window" << std::endl;
@@ -48,6 +57,10 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
+
+	// adjusts where the window pops up on screen (px from top and left of your screen)
+	glfwSetWindowPos(window, 1500, 100);
+
 
 	//applies the OpenGL context to the window, makes OpenGL work with the window we just made
 	glfwMakeContextCurrent(window);
@@ -118,6 +131,21 @@ int main() {
 	// ground position
 	float groundY = -0.6;
 
+	// create camera
+	Camera camera(
+		glm::vec3(0.0f, 0.0f, 3.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		45.0f, 
+		(WINDOW_WIDTH/ WINDOW_HEIGHT),
+		0.1f,
+		100.0f
+	);
+	
+
+
+
+
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
 		// tells ImGui a new frame is starting
@@ -183,6 +211,19 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		// makes the draw call use the correct shader program
 		glUseProgram(shaderProgram);
+
+		// get view and projection matrix every frame
+		glm::mat4 view = camera.getViewMatrix();
+		glm::mat4 projection = camera.getProjectionMatrix();
+
+		// glGetUniformLocation() gets view uniform from shader and returns int ID for that variables slot 
+		// glUniformMatrix4fv uploads a 4x4 float matrix to that slot on the GPU
+		// requires the raw float data of the matrix
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		
+
+
 		// bind VAO before drawing
 		glBindVertexArray(VAO);
 		// draws the lines (shape to draw, how many lines, data type of indices, offest into the ebo)
