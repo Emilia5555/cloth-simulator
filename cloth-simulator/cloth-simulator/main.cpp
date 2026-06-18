@@ -80,7 +80,8 @@ int main() {
 	// stores ImGui input/output configuration
 	ImGuiIO& io = ImGui::GetIO();
 	// connects ImGui to windows
-	ImGui_ImplGlfw_InitForOpenGL(window,true);
+	// false prevents ImGui callbacks from being replaced with mine
+	ImGui_ImplGlfw_InitForOpenGL(window, false);
 	// conects ImGui to OpenGl 3.3 renderer
 	ImGui_ImplOpenGL3_Init("#version 330");
 	// dark theme for control panel
@@ -142,9 +143,12 @@ int main() {
 		100.0f
 	);
 	
+	glfwSetWindowUserPointer(window,&camera);
+	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
+	glfwSetCursorPosCallback(window, mouseMoveCallback);
+	glfwSetScrollCallback(window, scrollCallback);
 
-
-
+	camera.updateOrbit();
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
@@ -176,6 +180,10 @@ int main() {
 			GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
 			damping = 0.999f;
 			groundY=-0.6f;
+
+			//reset camera
+			camera.reset();
+
 			// regenerate the cloth
 			generateCloth(particles, springs, GRID_W, GRID_H, stiffness, shearStiffness, bendStiffness);
 			// call setupBuffers
