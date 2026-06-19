@@ -27,6 +27,8 @@
 #include <glm/gtc/type_ptr.hpp>
 //camera
 #include "camera.h"
+// sphere
+#include "sphere.h"
 
 
 int main() {
@@ -150,6 +152,43 @@ int main() {
 
 	camera.updateOrbit();
 
+	// setup sphere
+	glm::vec3 sphereCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+	float sphereRadius = 0.3f;
+	std::vector<float> sphereVertices;
+	std::vector<unsigned int> sphereIndices;
+	generateSphere(sphereCenter, sphereRadius, 20, 20, sphereVertices, sphereIndices);
+
+	// sphere buffers
+	// variables to hold IDs for buffers
+	unsigned int sphereVAO = 0;
+	unsigned int sphereVBO = 0;
+	unsigned int sphereEBO = 0;
+
+	// generate IDs numbers for buffers and store in variables
+	glGenVertexArrays(1, &sphereVAO);
+	glGenBuffers(1, &sphereVBO);
+	glGenBuffers(1, &sphereEBO);
+
+	// bind buffers
+	glBindVertexArray(sphereVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+
+	// allocate space for sphere vertices and upload data
+	glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(),GL_STATIC_DRAW);
+	// allocate space for sphere indices and upload data
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(unsigned int), sphereIndices.data(), GL_STATIC_DRAW);
+	
+	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// enables input slot 0
+	glEnableVertexAttribArray(0);
+
+	// unbind buffers
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
 		// tells ImGui a new frame is starting
@@ -230,12 +269,15 @@ int main() {
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		
-
-
 		// bind VAO before drawing
 		glBindVertexArray(VAO);
 		// draws the lines (shape to draw, how many lines, data type of indices, offest into the ebo)
 		glDrawElements(GL_LINES, springs.size() * 2, GL_UNSIGNED_INT, 0);
+
+		// draw sphere
+		glBindVertexArray(sphereVAO);
+		glDrawElements(GL_LINES, sphereIndices.size() * 2, GL_UNSIGNED_INT, 0);
+
 
 		// render ImGui controls
 		ImGui::Render();
