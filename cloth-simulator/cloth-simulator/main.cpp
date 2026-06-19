@@ -74,6 +74,9 @@ int main() {
 		return -1;
 	}
 
+	// make the depth correct
+	glEnable(GL_DEPTH_TEST);
+
 	// ImGui setup
 	// gotta have this
 	IMGUI_CHECKVERSION();
@@ -132,7 +135,7 @@ int main() {
 	//time tracking
 	float lastTime = glfwGetTime();
 	// ground position
-	float groundY = -0.6;
+	float groundY = -0.9;
 
 	// create camera
 	Camera camera(
@@ -206,8 +209,22 @@ int main() {
 		ImGui::SliderFloat("Stiffness", &stiffness, 0.0f, 100.0f);
 		ImGui::SliderFloat("Shear Stiffness", &shearStiffness, 0.0f, 10.0f);
 		ImGui::SliderFloat("Bend Stiffness", &bendStiffness, 0.0f, 10.0f);
-		// slider for y pos of ground (-2 to 0)
-		ImGui::SliderFloat("Ground Y", &groundY, -2.0f, 0.0f);
+		// slider for y pos of center of sphere (-2 to 0)
+		if (ImGui::SliderFloat("Sphere Center vertical", &sphereCenter.y, -2.0f, 2.0f)) 
+		{
+			generateSphere(sphereCenter, sphereRadius, 20, 20, sphereVertices, sphereIndices);
+
+			// draw sphere
+			glBindVertexArray(sphereVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+
+			// allocate space for sphere vertices and upload data
+			glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW);
+			// allocate space for sphere indices and upload data
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(unsigned int), sphereIndices.data(), GL_STATIC_DRAW);
+
+		}
 		// reset button
 		// if reset button is pushed
 		if (ImGui::Button("Reset")) 
@@ -244,18 +261,19 @@ int main() {
 		// apply springs multiple times per loop to prevent weird behavior
 		for(int i = 0; i < 40; i++) {
 			applySprings(particles, springs);
+			resolveSphereCollisions(particles, sphereCenter, sphereRadius);
 		}
-		
+
 		// make sure the cloth doesn't go through the floor
 		resolveGroundCollisions(particles, groundY);
 
 		// upload position data
 		uploadPositions(VBO, particles);
 
-		// indicates color to set (red,green, blue, alpha) uses 0-1 scale, expects float values
+		// indicates color to set background (red,green, blue, alpha) uses 0-1 scale, expects float values
 		glClearColor(0.067f, 0.071f, 0.102f, 1.0f);
 		// sets the color 
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// makes the draw call use the correct shader program
 		glUseProgram(shaderProgram);
 
@@ -271,12 +289,16 @@ int main() {
 		
 		// bind VAO before drawing
 		glBindVertexArray(VAO);
-		// draws the lines (shape to draw, how many lines, data type of indices, offest into the ebo)
+		// set color for mesh
+		glUniform3f(glGetUniformLocation(shaderProgram, "color"), 1.0f, 1.0f, 1.0f);
+		// draws the lines for mesh (shape to draw, how many lines, data type of indices, offest into the ebo)
 		glDrawElements(GL_LINES, springs.size() * 2, GL_UNSIGNED_INT, 0);
 
 		// draw sphere
 		glBindVertexArray(sphereVAO);
-		glDrawElements(GL_LINES, sphereIndices.size() * 2, GL_UNSIGNED_INT, 0);
+		// set color for sphere
+		glUniform3f(glGetUniformLocation(shaderProgram, "color"), 0.4f, 0.4f, 0.451f);
+		glDrawElements(GL_TRIANGLES, sphereIndices.size() , GL_UNSIGNED_INT, 0);
 
 
 		// render ImGui controls

@@ -12,6 +12,7 @@ const char* vertexShaderSource = R"(
 	uniform mat4 view;
 	uniform mat4 projection;
 
+
 	//main function that runs for every vertex
 	void main() {
 		// matricex mutiplication applies left to right
@@ -28,8 +29,11 @@ const char* fragmentShaderSource = R"(
 	// creates an output variable FragColor that is a vec4
 	out vec4 FragColor;
 
+	// stores color
+	uniform vec3 color;
+
 	void main(){
 		//sets the color of FragColor
-		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+		FragColor = vec4(color, 1.0);
 	}
 )";

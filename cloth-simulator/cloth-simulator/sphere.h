@@ -12,6 +12,9 @@
 void generateSphere(glm::vec3 center, float radius, int latSteps, int longSteps, 
 	std::vector<float>& outVertices, std::vector<unsigned int>& outIndices) 
 {
+	// get rid of previous information in outVertices and outIndexes
+	outVertices.clear();
+	outIndices.clear();
 	// loop through latitude steps to get angles from 0 to pi
 	for (int i = 0; i <= latSteps; i++) 
 	{
@@ -50,18 +53,23 @@ void generateSphere(glm::vec3 center, float radius, int latSteps, int longSteps,
 		{
 			// current point runs from 0 to (lat + 1)(long + 1) - 1
 			int current = i * (longSteps + 1) + j;
-			// horizontal neighbor
+			// right neighbor
 			int next = current + 1;
-			// vertical neighbor
+			// bottom neighbor
 			int below = current + (longSteps + 1);
+			// one below and one right
+			int belowNext = below + 1;
 
-			// horizontal connections
-			outIndices.push_back(current);
-			outIndices.push_back(next);
-
-			// vertical connections
+			// first tirangle
 			outIndices.push_back(current);
 			outIndices.push_back(below);
+			outIndices.push_back(next);
+
+			// second triangle
+			outIndices.push_back(next);
+			outIndices.push_back(below);
+			outIndices.push_back(belowNext);
+
 		}
 	}
 

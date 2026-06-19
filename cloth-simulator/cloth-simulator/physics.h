@@ -17,12 +17,13 @@ void applyForces(std::vector<Particle>& particles, float deltaTime) {
 	for (Particle& p : particles) {
 		// skips pinned particles so they dont move
 		if (!p.pinned) {
-			// temporary to hold initial position
-			glm::vec3 temp = p.position;
-			// update position to position + (change in position) * acceleration * deltaTime^2
-			// 0.98f * GRAVITY mimics acceleration due to gravity
-			p.position += (p.position - p.previousPosition) * damping + (GRAVITY * deltaTime * deltaTime);
-			p.previousPosition = temp;
+			// calcualte new position
+			// x(t + dt) = x(t) + x(t - dt) + a*dt^2
+			glm::vec3 newPos = p.position + (p.position - p.previousPosition) * damping + (GRAVITY * deltaTime * deltaTime);
+			// set previous position to new position
+			p.previousPosition = p.position;
+			// set current position to new position
+			p.position = newPos;
 
 		}
 	}
@@ -89,6 +90,29 @@ void resolveGroundCollisions(std::vector<Particle>& particles, float groundY) {
 			// dampen horizontal velocity when it hits the ground
 			p.previousPosition.x = p.position.x + (p.previousPosition.x - p.position.x) * 0.95f;
 			p.previousPosition.z = p.position.z + (p.previousPosition.z - p.position.z) * 0.95f;
+		}
+	}
+}
+
+void resolveSphereCollisions(std::vector<Particle>& particles, glm::vec3 sphereCenter, float sphereRadius) 
+{
+	// loop through particles vector
+	for (Particle& p : particles) 
+	{
+		// delta is how far the particle is from the center of the sphere
+		glm::vec3 delta = p.position - sphereCenter;
+		// length of delta
+		float distance = glm::length(delta);
+
+		// if the distance within the spheres radius
+		if (distance <= sphereRadius) 
+		{
+			// delta divided by its length gives a unit vector representing its direction
+			glm::vec3 direction = delta / distance;
+			// new position is the center of the sphere plus the radius times the direction the particle should move in
+			p.position = sphereCenter + direction * sphereRadius;
+			// friction for surface of square
+			p.previousPosition = p.position + (p.previousPosition - p.position) * 0.3f;		
 		}
 	}
 }

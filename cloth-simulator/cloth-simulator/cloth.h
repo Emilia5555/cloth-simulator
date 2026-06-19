@@ -22,35 +22,42 @@ void generateCloth(std::vector<Particle>& particles, std::vector<Spring>& spring
 	springs.clear();
 	// generate particles
 	// loop through height and width
-	for (int y = 0; y < gridH; y++) {
+	for (int z = 0; z < gridH; z++) {
 		for (int x = 0; x < gridW; x++) {
 			// space points evenly across the grid
 			// *2 -1 changes range of point from 0-1 to 0-2 to -1 to 1
 			// used smaller values than 2 and 1 to make sure cloth is always in frame
 			// make divisor a float to avoid integer division
 			float px = (x / (float)(gridW - 1) * 1.8f - 0.9f);
-			float py = (y / (float)(gridH - 1) * 1.3f - 0.4f);
-
+			float pz = (z / (float)(gridH - 1) * 1.8f - 0.9f);
+		
 			// make a particle object 
 			Particle p;
 			//set position to the variables we calculated earlier
-			p.position = glm::vec3(px, py, 0.0f);
-			// set velocity to 0
-			p.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+			p.position = glm::vec3(px, 0.5f, pz);
 			// particles aren't pinned by defualt
 			p.pinned = false;
 			p.previousPosition = p.position;
 			// add to vector of Particles
 			particles.push_back(p);
 
-			// pin top left corrner
-			if (x == 0 && y == gridH - 1) {
+			// pin top left corner
+			if (x == 0 && z == gridH - 1) {
 				particles.back().pinned = true;
 			}
-			//pin top right corrner
-			if (x == gridW - 1 && y == gridH - 1) {
+			//pin top right corner
+			if (x == gridW - 1 && z == gridH - 1) {
 				particles.back().pinned = true;
 			}
+			// pin bottom left corner
+			if (x == 0 && z == 0) {
+				particles.back().pinned = true;
+			}
+			//pin bottom right corner
+			if (x == gridW - 1 && z == 0) {
+				particles.back().pinned = true;
+			}
+
 
 		}
 	}
