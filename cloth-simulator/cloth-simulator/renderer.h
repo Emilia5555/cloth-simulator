@@ -60,6 +60,47 @@ void setupBuffers(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO, std::
 
 }
 
+// creates and configures VAO, VBO, and EBO for rendering sphere
+// deletes anything in buffer objects before creating new ones
+// sphereVAO: int to hold vertex array object ID
+// sphereVBO: int to hold vertex buffer object ID
+// sphereEBO: int to hold element buffer object ID
+// sphereVertices: holds positions of sphere vertices stored as 3 floats
+// sphereIndices: holds connections to be made between vertices in the sphere
+void setupSphereBuffers(unsigned int& sphereVAO, unsigned int& sphereVBO, unsigned int& sphereEBO, std::vector<float>& sphereVertices, std::vector<unsigned int>& sphereIndices)
+{
+	// clear anything that was in the buffers
+	glDeleteVertexArrays(1, &sphereVAO);
+	glDeleteBuffers(1, &sphereVBO);
+	glDeleteBuffers(1, &sphereEBO);
+	// generate IDs numbers for buffers and store in variables
+	glGenVertexArrays(1, &sphereVAO);
+	glGenBuffers(1, &sphereVBO);
+	glGenBuffers(1, &sphereEBO);
+
+	// bind buffers
+	glBindVertexArray(sphereVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+
+	// allocate space for sphere vertices and upload data
+	glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW);
+	// allocate space for sphere indices and upload data
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(unsigned int), sphereIndices.data(), GL_STATIC_DRAW);
+
+	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// enables input slot 0
+	glEnableVertexAttribArray(0);
+
+	// unbind buffers
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
+
+
 // creates a vector of floats from particle positions and uploads that data to the GPU 
 // called after every position update to sync CPU and GPU positions
 // VBO: ID of vertex buffer object

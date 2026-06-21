@@ -60,11 +60,11 @@ int main() {
 		return -1;
 	}
 
-	// adjusts where the window pops up on screen (px from top and left of your screen)
+	// adjusts where the window pops up on screen (px from top and left of screen)
 	glfwSetWindowPos(window, 1500, 100);
 
 
-	//applies the OpenGL context to the window, makes OpenGL work with the window we just made
+	// applies the OpenGL context to the window, makes OpenGL work with the window we just made
 	glfwMakeContextCurrent(window);
 
 	//initialize GLAD to make GLFW work with windows
@@ -74,7 +74,7 @@ int main() {
 		return -1;
 	}
 
-	// make the depth correct
+	// make objects appear infront or behind eachother
 	glEnable(GL_DEPTH_TEST);
 
 	// ImGui setup
@@ -93,16 +93,12 @@ int main() {
 	ImGui::StyleColorsDark();
 
 
-
-
 	// create shader program object for vertex and fragment shader
 	unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-	// 10x 10 grid of particle
+	// 40x 40 grid of particle
 	const int GRID_W = 40;
 	const int GRID_H = 40;
-
-
 
 	// vector to hold particles
 	std::vector<Particle> particles;
@@ -113,6 +109,7 @@ int main() {
 	const float DEFAULT_SHEAR = 1.0f;
 	const float DEFAULT_BEND = 0.08f;
 
+	// set stiffness
 	float stiffness = DEFAULT_STIFFNESS;
 	float shearStiffness = DEFAULT_SHEAR;
 	float bendStiffness = DEFAULT_BEND;
@@ -128,8 +125,6 @@ int main() {
 	// holds ID for element buffer object
 	unsigned int EBO = 0;
 	
-
-
 	setupBuffers(VAO, VBO, EBO, particles, springs);
 
 	//time tracking
@@ -148,49 +143,33 @@ int main() {
 		100.0f
 	);
 	
-	glfwSetWindowUserPointer(window,&camera);
+	// store camera pointer on glfw window so callbacks can access it
+	glfwSetWindowUserPointer(window, &camera);
+	// set glfw callback functions to my callback functions for mouse events
+	// these get called if the event is detected by glfwPollEvents
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetCursorPosCallback(window, mouseMoveCallback);
 	glfwSetScrollCallback(window, scrollCallback);
 
+	// update camera positions
 	camera.updateOrbit();
 
 	// setup sphere
+	// position of sphere center
 	glm::vec3 sphereCenter = glm::vec3(0.0f, 0.0f, 0.0f);
 	float sphereRadius = 0.3f;
+	// store points that makeup sphere
 	std::vector<float> sphereVertices;
+	// store connections between points
 	std::vector<unsigned int> sphereIndices;
 	generateSphere(sphereCenter, sphereRadius, 20, 20, sphereVertices, sphereIndices);
-
-	// sphere buffers
+	
+	// setup buffers for sphere
 	// variables to hold IDs for buffers
 	unsigned int sphereVAO = 0;
 	unsigned int sphereVBO = 0;
 	unsigned int sphereEBO = 0;
-
-	// generate IDs numbers for buffers and store in variables
-	glGenVertexArrays(1, &sphereVAO);
-	glGenBuffers(1, &sphereVBO);
-	glGenBuffers(1, &sphereEBO);
-
-	// bind buffers
-	glBindVertexArray(sphereVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
-
-	// allocate space for sphere vertices and upload data
-	glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(),GL_STATIC_DRAW);
-	// allocate space for sphere indices and upload data
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(unsigned int), sphereIndices.data(), GL_STATIC_DRAW);
-	
-	//tells open gl that VBO has vertex data where each vertex is three floats and the vertexes are three floats apart
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	// enables input slot 0
-	glEnableVertexAttribArray(0);
-
-	// unbind buffers
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	setupSphereBuffers(sphereVAO, sphereVBO, sphereEBO, sphereVertices, sphereIndices);
 
 	// while the user has not closed the window 
 	while (!glfwWindowShouldClose(window)) {
@@ -281,6 +260,7 @@ int main() {
 		glm::mat4 view = camera.getViewMatrix();
 		glm::mat4 projection = camera.getProjectionMatrix();
 
+		// send camera matrices to the GPU
 		// glGetUniformLocation() gets view uniform from shader and returns int ID for that variables slot 
 		// glUniformMatrix4fv uploads a 4x4 float matrix to that slot on the GPU
 		// requires the raw float data of the matrix

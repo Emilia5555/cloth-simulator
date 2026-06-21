@@ -4,7 +4,6 @@
 struct Particle {
 	glm::vec3 position;
 	glm::vec3 previousPosition;
-	glm::vec3 velocity;
 	float mass;
 	bool pinned;
 };

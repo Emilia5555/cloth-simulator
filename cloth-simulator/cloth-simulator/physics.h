@@ -28,6 +28,7 @@ void applyForces(std::vector<Particle>& particles, float deltaTime) {
 		}
 	}
 }
+
 // connects particels with springs
 // corrects particle position to maintian natural rest lengths
 // particles: a vector of particle objects passed by reference
@@ -94,6 +95,10 @@ void resolveGroundCollisions(std::vector<Particle>& particles, float groundY) {
 	}
 }
 
+// prevents cloth from going through the sphere
+// particles: vector of all particles
+// sphereCenter: position of the center of the sphere
+// sphereRadius: radius of the sphere
 void resolveSphereCollisions(std::vector<Particle>& particles, glm::vec3 sphereCenter, float sphereRadius) 
 {
 	// loop through particles vector

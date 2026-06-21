@@ -45,7 +45,7 @@ void generateCloth(std::vector<Particle>& particles, std::vector<Spring>& spring
 			if (x == 0 && z == gridH - 1) {
 				particles.back().pinned = true;
 			}
-			//pin top right corner
+			// pin top right corner
 			if (x == gridW - 1 && z == gridH - 1) {
 				particles.back().pinned = true;
 			}
@@ -53,7 +53,7 @@ void generateCloth(std::vector<Particle>& particles, std::vector<Spring>& spring
 			if (x == 0 && z == 0) {
 				particles.back().pinned = true;
 			}
-			//pin bottom right corner
+			// pin bottom right corner
 			if (x == gridW - 1 && z == 0) {
 				particles.back().pinned = true;
 			}
