@@ -47,3 +47,11 @@ Requires Visual Studio 2022 with the Desktop Development with C++ workload and v
 1. Clone the repository
 2. Open `cloth-simulator.sln` in Visual Studio
 3. Build and run with Ctrl+F5
+
+## Demo
+
+**Hanging cloth simulation**
+[Watch on YouTube](https://www.youtube.com/watch?v=v2ppRnemSzA)
+
+**Cloth draped over sphere with collision**
+[Watch on YouTube](https://www.youtube.com/watch?v=8psz9TMvUZg)
